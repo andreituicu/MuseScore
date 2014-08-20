@@ -83,6 +83,7 @@ static bool needsStaff(Element* e)
 Palette::Palette(QWidget* parent)
    : QWidget(parent)
       {
+      setAccessibleName(name());
       extraMag      = 1.0;
       currentIdx    = -1;
       dragIdx       = -1;

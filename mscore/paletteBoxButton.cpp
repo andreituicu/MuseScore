@@ -13,6 +13,7 @@
 #include "paletteBoxButton.h"
 #include "palette.h"
 #include "preferences.h"
+#include <QGraphicsEffect>
 
 namespace Ms {
 
@@ -21,13 +22,14 @@ namespace Ms {
 //---------------------------------------------------------
 
 PaletteBoxButton::PaletteBoxButton(Palette* p, QWidget* parent)
-   : QToolButton(parent)
+   : AccessibleToolButton(parent)
       {
       palette = p;
       editAction = 0;
 
+      setAccessibleName(p->name());
       setCheckable(true);
-      setFocusPolicy(Qt::NoFocus);
+      setFocusPolicy(Qt::TabFocus);
       connect(this, SIGNAL(clicked(bool)), this, SLOT(showPalette(bool)));
       setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
       setText(qApp->translate("Palette", palette->name().toUtf8()));
@@ -145,5 +147,6 @@ void PaletteBoxButton::paintEvent(QPaintEvent*)
       opt.features &= (~QStyleOptionToolButton::HasMenu);
       p.drawComplexControl(QStyle::CC_ToolButton, opt);
       }
+
 }
 

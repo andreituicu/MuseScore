@@ -12,7 +12,7 @@
 
 #ifndef __PALETTE_BOX_BUTTON_H__
 #define __PALETTE_BOX_BUTTON_H__
-
+#include "accessibletoolbutton.h"
 namespace Ms {
 
 class Palette;
@@ -31,7 +31,7 @@ enum class PaletteCommand : char {
 //   PaletteBoxButton
 //---------------------------------------------------------
 
-class PaletteBoxButton : public QToolButton {
+class PaletteBoxButton : public AccessibleToolButton {
       Q_OBJECT
 
       Palette* palette;
@@ -63,6 +63,7 @@ class PaletteBoxButton : public QToolButton {
 
    public:
       PaletteBoxButton(Palette*, QWidget* parent = 0);
+
       void setId(int v) { id = v; }
       };
 
