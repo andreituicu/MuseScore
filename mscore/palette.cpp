@@ -11,6 +11,7 @@
 //  the file LICENSE.GPL
 //=============================================================================
 
+#include <QFocusEvent>
 #include "palette.h"
 #include "musescore.h"
 #include "libmscore/element.h"
@@ -88,6 +89,7 @@ Palette::Palette(QWidget* parent)
       currentIdx    = -1;
       dragIdx       = -1;
       selectedIdx   = -1;
+      highlightedCellIdx = -1;
       _yOffset      = 0.0;
       setGrid(50, 60);
       _drawGrid     = false;
@@ -96,7 +98,9 @@ Palette::Palette(QWidget* parent)
       setReadOnly(false);
       setSystemPalette(false);
       _moreElements = false;
+      setFocusPolicy(Qt::StrongFocus);
       setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Ignored);
+      accessibilityHandler = 0;
       }
 
 Palette::~Palette()
@@ -272,6 +276,18 @@ void Palette::mousePressEvent(QMouseEvent* ev)
       PaletteCell* cell = cells[dragIdx];
       if (cell && (cell->tag == "ShowMore"))
             emit displayMore(_name);
+
+      QRect r;
+      if (highlightedCellIdx != -1)
+            r = idxRect(highlightedCellIdx);
+      highlightedCellIdx = idx(ev->pos());
+      if (highlightedCellIdx != -1) {
+            if (cells[highlightedCellIdx] == 0)
+                  highlightedCellIdx = -1;
+            else
+                  r |= idxRect(highlightedCellIdx);
+            }
+      update(r);
       }
 
 //---------------------------------------------------------
@@ -308,6 +324,10 @@ void Palette::mouseDoubleClickEvent(QMouseEvent* ev)
       if (_disableDoubleClick)
             return;
       int i = idx(ev->pos());
+      applyEvent(i);
+      }
+
+void Palette::applyEvent(int i) {
       if (i == -1)
             return;
       Score* score = mscore->currentScore();
@@ -554,6 +574,37 @@ void Palette::mouseDoubleClickEvent(QMouseEvent* ev)
       mscore->endCmd();
       }
 
+void Palette::keyPressEvent(QKeyEvent *ev)
+      {
+      switch (ev->key()) {
+            case Qt::Key_Return:
+            case Qt::Key_Enter:
+            case Qt::Key_Space:
+                  returnPressedEvent(ev);
+                  return;
+            case Qt::Key_Tab:
+            case Qt::Key_Right:
+                  if (tabPressedEvent(ev))
+                        return;
+                  break;
+            case Qt::Key_Backtab:
+            case Qt::Key_Left:
+                  if (backtabPressedEvent(ev))
+                        return;
+           case  Qt::Key_Up:
+                  if (keyUpPressedEvent(ev))
+                        return;
+                  break;
+            case Qt::Key_Down:
+                  if (keyDownPressedEvent(ev))
+                        return;
+                  break;
+            default:
+                  break;
+            }
+      QWidget::keyPressEvent(ev);
+      }
+
 //---------------------------------------------------------
 //   idx
 //---------------------------------------------------------
@@ -600,6 +651,45 @@ QRect Palette::idxRect(int i)
       return QRect(cc * hhgrid, cr * vgrid, hhgrid, vgrid);
       }
 
+void Palette::moveHighlightedCellTo(int idx, bool accessibleEvent)
+      {
+      QRect r;
+
+      if (highlightedCellIdx != -1)
+            r = idxRect(highlightedCellIdx);
+
+      r |= idxRect(idx);
+      highlightedCellIdx = idx;
+      update(r);
+      if (accessibleEvent) {
+            updateAccessibility(AccessiblePalette::KeyboardNavigation);
+            }
+      }
+
+void Palette::updateAccessibility(AccessiblePalette::EventType t)
+      {
+      if (accessibilityHandler) {
+            accessibilityHandler->accessibleEvent(t);
+            switch (t) {
+                  case AccessiblePalette::KeyboardNavigation: {
+                        QAccessibleValueChangeEvent ev(this, highlightedCellIdx);
+                        QAccessible::updateAccessibility(&ev);
+                        }
+                        break;
+                  case AccessiblePalette::MouseMove: {
+                        QAccessibleValueChangeEvent ev(this, currentIdx);
+                        QAccessible::updateAccessibility(&ev);
+                        }
+                  case AccessiblePalette::Selection: {
+                        QAccessibleValueChangeEvent ev(this, selectedIdx);
+                        QAccessible::updateAccessibility(&ev);
+                        }
+                  default:
+                        break;
+                  }
+            }
+      }
+
 //---------------------------------------------------------
 //   mouseMoveEvent
 //---------------------------------------------------------
@@ -633,10 +723,11 @@ void Palette::mouseMoveEvent(QMouseEvent* ev)
                         }
                   }
             }
-      else {
+      else if (currentIdx != idx(ev->pos())){
             QRect r;
             if (currentIdx != -1)
                   r = idxRect(currentIdx);
+
             currentIdx = idx(ev->pos());
             if (currentIdx != -1) {
                   if (cells[currentIdx] == 0)
@@ -645,6 +736,7 @@ void Palette::mouseMoveEvent(QMouseEvent* ev)
                         r |= idxRect(currentIdx);
                   }
             update(r);
+            updateAccessibility(AccessiblePalette::MouseMove);
             }
       }
 
@@ -659,6 +751,103 @@ void Palette::leaveEvent(QEvent*)
             currentIdx = -1;
             update(r);
             }
+      }
+
+void Palette::focusInEvent(QFocusEvent* e)
+      {
+      if (e->reason() == Qt::TabFocusReason) {
+            for (int i = 0; i < cells.size(); i++) {
+                  if (cells[i] != 0) {
+                        highlightedCellIdx = i;
+                        break;
+                        }
+                  }
+            QRect r = idxRect(highlightedCellIdx);
+            update(r);
+            }
+
+      if (e->reason() == Qt::BacktabFocusReason) {
+            for (int i = cells.size() -1; i >= 0; i--) {
+                  if (cells[i] != 0) {
+                        highlightedCellIdx = i;
+                        break;
+                        }
+                  }
+            QRect r = idxRect(highlightedCellIdx);
+            update(r);
+            }
+      }
+
+void Palette::focusOutEvent(QFocusEvent *)
+      {
+      if (highlightedCellIdx != -1) {
+            QRect r = idxRect(highlightedCellIdx);
+            highlightedCellIdx = -1;
+            update(r);
+            }
+      }
+
+bool Palette::tabPressedEvent(QKeyEvent* /*ev*/)
+      {
+      int i = highlightedCellIdx;
+      while (i < cells.size() - 1) {
+            i++;
+            if (cells[i] && cells[i]->element) {
+                  moveHighlightedCellTo(i);
+                  return true;
+                  }
+            }
+      return false;
+      }
+
+bool Palette::backtabPressedEvent(QKeyEvent* /*ev*/)
+      {
+
+      int i = highlightedCellIdx;
+      while (i > 0) {
+            i--;
+            if (cells[i] && cells[i]->element) {
+                  moveHighlightedCellTo(i);
+                  return true;
+                  }
+            }
+      return false;
+      }
+
+bool Palette::keyUpPressedEvent(QKeyEvent* /*ev*/)
+      {
+      int i = highlightedCellIdx;
+      while (i - columns() >= 0 ) {
+            i -= columns();
+            if (cells[i] && cells[i]->element) {
+                  moveHighlightedCellTo(i);
+                  return true;
+                  }
+            }
+      return false;
+      }
+
+bool Palette::keyDownPressedEvent(QKeyEvent* /*ev*/)
+      {
+      int i = highlightedCellIdx;
+      while (i + columns() < cells.size() - 1) {
+            i += columns();
+
+            if (cells[i] && cells[i]->element) {
+                  moveHighlightedCellTo(i);
+                  return true;
+                  }
+            }
+      return false;
+      }
+
+void Palette::returnPressedEvent(QKeyEvent* /*ev*/)
+      {
+      if(selectable())
+            selectedIdx = highlightedCellIdx;
+      updateAccessibility(AccessiblePalette::Selection);
+      applyEvent(highlightedCellIdx);
+      update();
       }
 
 //---------------------------------------------------------
@@ -798,14 +987,22 @@ void Palette::paintEvent(QPaintEvent* /*event*/)
             QRect rShift = r.translated(0, yoffset);
             p.setPen(pen);
             QColor c(MScore::selectColor[0]);
+
             if (idx == selectedIdx) {
-                  c.setAlpha(100);
+                  c.setAlpha(99);
                   p.fillRect(r, c);
                   }
             else if (idx == currentIdx) {
                   c.setAlpha(50);
                   p.fillRect(r, c);
                   }
+
+            if (idx == highlightedCellIdx) {
+                  QColor highlightC(Qt::red);
+                  highlightC.setAlpha(40);
+                  p.fillRect(r, highlightC);
+                  }
+
             if (cells.isEmpty() || cells[idx] == 0)
                   continue;
 
@@ -906,6 +1103,11 @@ void Palette::paintEvent(QPaintEvent* /*event*/)
 
 bool Palette::event(QEvent* ev)
       {
+      if (ev->type() == QEvent::KeyPress) {
+            keyPressEvent(static_cast<QKeyEvent*>(ev));
+            return true;
+            }
+
       if (columns() && (ev->type() == QEvent::ToolTip)) {
             int rightBorder = width() % hgrid;
             int hhgrid = hgrid + (rightBorder / columns());
@@ -1077,6 +1279,7 @@ void Palette::dropEvent(QDropEvent* event)
                   cells.append(cells[dragSrcIdx]);
                   cells[dragSrcIdx] = 0;
                   ok = true;
+                  i = cells.indexOf(cells.back());
                   }
             else if (dragSrcIdx != i) {
                   PaletteCell* c = cells[dragSrcIdx];
@@ -1085,6 +1288,8 @@ void Palette::dropEvent(QDropEvent* event)
                   delete e;
                   ok = true;
                   }
+
+            highlightedCellIdx = i;
             update(idxRect(i) | idxRect(dragSrcIdx));
             event->setDropAction(Qt::MoveAction);
             }
@@ -1496,6 +1701,11 @@ void Palette::actionToggled(bool /*val*/)
       update();
       }
 
+void Palette::setAccessibilityHandler(AccessiblePalette *a)
+      {
+      accessibilityHandler = a;
+      }
+
 //---------------------------------------------------------
 //   PaletteProperties
 //---------------------------------------------------------
@@ -1591,6 +1801,57 @@ void PaletteScrollArea::resizeEvent(QResizeEvent* re)
       if (_restrictHeight) {
             setMaximumHeight(h+6);
             }
+      }
+
+AccessiblePalette::AccessiblePalette(Palette *p) : QAccessibleWidget(p) {
+      this->p = p;
+      currentEventType = EventType::None;
+      }
+
+void AccessiblePalette::accessibleEvent(EventType t)
+      {
+      currentEventType = t;
+      }
+
+QString AccessiblePalette::text(QAccessible::Text t) const
+      {
+      switch (t) {
+            case QAccessible::Name:
+                  return tr("%1 Palette").arg(p->name());
+            case QAccessible::Value:
+                  switch (currentEventType) {
+                        case KeyboardNavigation:
+                              if (p->highlightedCell())
+                                    return p->highlightedCell()->name;
+                              break;
+                        case MouseMove:
+                              if (p->currentMouseCell())
+                                    return p->currentMouseCell()->name;
+                              break;
+                        case Selection:
+                              if (p->selectedCell())
+                                    return tr("Selecting %1").arg(p->selectedCell()->name);
+                              break;
+                        default:
+                              return QString();
+                        }
+                  return QString();
+            default:
+                  return QString();
+            }
+      }
+
+QAccessibleInterface* AccessiblePalette::AccessiblePaletteFactory(const QString &classname, QObject *object)
+      {
+          AccessiblePalette* iface = 0;
+          if (classname == QLatin1String("Ms::Palette") && object && object->isWidgetType()){
+                qDebug("Creating interface for Palette object");
+                Palette* p = static_cast<Palette*>(object);
+                iface = new AccessiblePalette(p);
+                p->setAccessibilityHandler(iface);
+                }
+
+          return static_cast<QAccessibleInterface*>(iface);
       }
 }
 

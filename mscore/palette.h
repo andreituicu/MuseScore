@@ -21,6 +21,7 @@
 #ifndef __PALETTE_H__
 #define __PALETTE_H__
 
+#include <QAccessibleWidget>
 #include "ui_palette.h"
 #include "ui_cellproperties.h"
 #include "libmscore/sym.h"
@@ -32,6 +33,7 @@ class Sym;
 class Xml;
 class XmlReader;
 class Palette;
+class AccessiblePalette;
 
 //---------------------------------------------------------
 //   PaletteCell
@@ -100,6 +102,24 @@ class PaletteScrollArea : public QScrollArea {
 //   Palette
 //---------------------------------------------------------
 
+class AccessiblePalette : public QAccessibleWidget {
+public:
+      enum EventType {
+            KeyboardNavigation,
+            MouseMove,
+            Selection,
+            None
+            };
+
+      virtual QString text(QAccessible::Text t) const override;
+      AccessiblePalette(Palette* p);
+      void accessibleEvent(EventType t);
+      static QAccessibleInterface* AccessiblePaletteFactory(const QString &classname, QObject *object);
+private:
+      Palette* p;
+      EventType currentEventType;
+      };
+
 class Palette : public QWidget {
       Q_OBJECT
 
@@ -110,6 +130,7 @@ class Palette : public QWidget {
       int currentIdx;
       int dragIdx;
       int selectedIdx;
+      int highlightedCellIdx;
       QPoint dragStartPosition;
       int dragSrcIdx;
 
@@ -123,10 +144,13 @@ class Palette : public QWidget {
 
       bool _moreElements;
 
+      AccessiblePalette* accessibilityHandler;
+
       void redraw(const QRect&);
       virtual void paintEvent(QPaintEvent*);
       virtual void mousePressEvent(QMouseEvent*);
       virtual void mouseDoubleClickEvent(QMouseEvent*);
+      virtual void keyPressEvent(QKeyEvent *);
       virtual void mouseMoveEvent(QMouseEvent*);
       virtual void leaveEvent(QEvent*);
       virtual bool event(QEvent*);
@@ -136,10 +160,21 @@ class Palette : public QWidget {
       virtual void dragMoveEvent(QDragMoveEvent*);
       virtual void dropEvent(QDropEvent*);
       virtual void contextMenuEvent(QContextMenuEvent*);
+      virtual void focusInEvent(QFocusEvent *)  override;
+      virtual void focusOutEvent(QFocusEvent *) override;
+
+      void applyEvent(int i);
+      void returnPressedEvent(QKeyEvent* ev);
+      bool tabPressedEvent(QKeyEvent* ev);
+      bool backtabPressedEvent(QKeyEvent* ev);
+      bool keyUpPressedEvent(QKeyEvent* ev);
+      bool keyDownPressedEvent(QKeyEvent* ev);
 
       int idx(const QPoint&) const;
       QRect idxRect(int);
       void layoutCell(PaletteCell*);
+      void moveHighlightedCellTo(int idx, bool accessibleEvent = true);
+      void updateAccessibility(AccessiblePalette::EventType t);
 
    private slots:
       void actionToggled(bool val);
@@ -197,9 +232,16 @@ class Palette : public QWidget {
       bool moreElements() const      { return _moreElements; }
       void setMoreElements(bool val);
 
+      PaletteCell* highlightedCell()  { return highlightedCellIdx == -1 ? NULL : cells[highlightedCellIdx]; }
+      PaletteCell* currentMouseCell() { return currentIdx         == -1 ? NULL : cells[currentIdx];         }
+      PaletteCell* selectedCell()     { return selectedIdx        == -1 ? NULL : cells[selectedIdx];        }
+
       virtual int heightForWidth(int) const;
       virtual QSize sizeHint() const;
+
+      void setAccessibilityHandler(AccessiblePalette* a);
       };
+
 
 
 } // namespace Ms

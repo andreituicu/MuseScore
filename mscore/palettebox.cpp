@@ -70,6 +70,7 @@ PaletteBox::PaletteBox(QWidget* parent)
       vl->addLayout(hl);
 
       QWidget* paletteList = new QWidget;
+      paletteList->setAccessibleName(tr("Palettes"));
       sa->setWidget(paletteList);
       vbox = new QVBoxLayout;
       paletteList->setLayout(vbox);

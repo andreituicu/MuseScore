@@ -4617,6 +4617,7 @@ int main(int argc, char* av[])
       QAccessible::installFactory(AccessibleScoreView::ScoreViewFactory);
       QAccessible::installFactory(AccessibleSearchBox::SearchBoxFactory);
       QAccessible::installFactory(Awl::AccessibleAbstractSlider::AbstractSliderFactory);
+      QAccessible::installFactory(AccessiblePalette::AccessiblePaletteFactory);
 
       Q_INIT_RESOURCE(zita);
 
