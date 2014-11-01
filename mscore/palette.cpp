@@ -758,7 +758,7 @@ void Palette::focusInEvent(QFocusEvent* e)
       if (e->reason() == Qt::TabFocusReason) {
             for (int i = 0; i < cells.size(); i++) {
                   if (cells[i] != 0) {
-                        highlightedCellIdx = i;
+                        moveHighlightedCellTo(i);
                         break;
                         }
                   }
@@ -769,7 +769,7 @@ void Palette::focusInEvent(QFocusEvent* e)
       if (e->reason() == Qt::BacktabFocusReason) {
             for (int i = cells.size() -1; i >= 0; i--) {
                   if (cells[i] != 0) {
-                        highlightedCellIdx = i;
+                        moveHighlightedCellTo(i);
                         break;
                         }
                   }
