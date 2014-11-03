@@ -115,6 +115,7 @@ public:
       AccessiblePalette(Palette* p);
       void accessibleEvent(EventType t);
       static QAccessibleInterface* AccessiblePaletteFactory(const QString &classname, QObject *object);
+      QWindow* window() const override { return qApp->focusWindow(); }
 private:
       Palette* p;
       EventType currentEventType;

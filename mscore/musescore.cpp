@@ -1491,6 +1491,17 @@ void MuseScore::showMidiImportPanel()
       importmidiShowPanel->hide();
       }
 
+void MuseScore::shiftFocusToPalette(QString pName)
+      {
+      for (Palette* p : getPaletteBox()->palettes()) {
+            if (p->name() == pName) {
+                  if (!p->isVisible())
+                        p->setVisible(true);
+                  p->setFocus(Qt::TabFocusReason);
+                  }
+            }
+      }
+
 //---------------------------------------------------------
 //   dragEnterEvent
 //---------------------------------------------------------

@@ -667,6 +667,7 @@ class MuseScore : public QMainWindow, public MuseScoreCore {
 
       Inspector* inspector()           { return _inspector; }
       PluginCreator* pluginCreator()   { return _pluginCreator; }
+      void shiftFocusToPalette(QString p);
       ScoreView* currentScoreView() const { return cv; }
       QToolButton* playButton()        { return _playButton;    }
       void showMessage(const QString& s, int timeout);
