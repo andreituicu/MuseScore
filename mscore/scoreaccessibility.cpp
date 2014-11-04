@@ -13,6 +13,7 @@
 #include "mixer.h"
 #include "drumroll.h"
 #include "pianoroll.h"
+#include "palettebox.h"
 
 namespace Ms{
 
@@ -196,6 +197,7 @@ void ScoreAccessibility::updateAccessibilityInfo()
            !(mscore->getMixer() && mscore->getMixer()->isAncestorOf(qApp->focusWidget())) &&
            !(mscore->searchDialog() && mscore->searchDialog()->isAncestorOf(qApp->focusWidget())) &&
            !(mscore->getDrumrollEditor() && mscore->getDrumrollEditor()->isAncestorOf(qApp->focusWidget())) &&
+           !mscore->getPaletteBox()->isAncestorOf(qApp->focusWidget()) &&
            !(mscore->getPianorollEditor() && mscore->getPianorollEditor()->isAncestorOf(qApp->focusWidget()))) {
             mscore->activateWindow();
             w->setFocus();

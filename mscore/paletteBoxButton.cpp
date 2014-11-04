@@ -13,6 +13,8 @@
 #include "paletteBoxButton.h"
 #include "palette.h"
 #include "preferences.h"
+#include "musescore.h"
+#include "scoreview.h"
 #include <QGraphicsEffect>
 
 namespace Ms {
@@ -118,6 +120,10 @@ void PaletteBoxButton::showPalette(bool visible)
             // close all palettes
             emit closeAll();
             }
+
+      if(!visible && qApp->focusWidget() == palette && mscore->currentScore())
+            mscore->currentScoreView()->setFocus();
+
       palette->setVisible(visible);
       setChecked(visible);
       setArrowType(visible ? Qt::DownArrow : Qt::RightArrow );

@@ -1,6 +1,8 @@
 
 namespace Ms {
 
+#ifndef __ACCESSIBLE_TOOL_BUTTON__
+#define __ACCESSIBLE_TOOL_BUTTON__
 /*
  * This class inherits QToolButton and allows tabbing through the tool bar's buttons
  */
@@ -15,4 +17,6 @@ public:
       void keyPressEvent(QKeyEvent *e);
       };
 
+#endif
 }
+

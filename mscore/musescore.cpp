@@ -105,6 +105,7 @@
 #include "startcenter.h"
 #include "help.h"
 #include "awl/aslider.h"
+#include "paletteBoxButton.h"
 
 #ifdef AEOLUS
 extern Ms::Synthesizer* createAeolus();
@@ -1493,11 +1494,12 @@ void MuseScore::showMidiImportPanel()
 
 void MuseScore::shiftFocusToPalette(QString pName)
       {
-      for (Palette* p : getPaletteBox()->palettes()) {
-            if (p->name() == pName) {
-                  if (!p->isVisible())
-                        p->setVisible(true);
-                  p->setFocus(Qt::TabFocusReason);
+      for (PaletteBoxButton* p : getPaletteBox()->findChildren<PaletteBoxButton*>()) {
+            if (p->text() == pName) {
+                  if (!p->isChecked())
+                        p->click();
+                  p->getPalette()->setFocus(Qt::TabFocusReason);
+                  return;
                   }
             }
       }
@@ -4143,6 +4145,52 @@ void MuseScore::cmd(QAction* a, const QString& cmd)
             showPalette(a->isChecked());
       else if (cmd == "startcenter")
             showStartcenter(a->isChecked());
+      else if (cmd == "grace-notes-palette")
+            shiftFocusToPalette("Grace Notes");
+      else if (cmd == "clefs-palette")
+         shiftFocusToPalette("Clefs");
+      else if (cmd == "key-signatures-palette")
+        shiftFocusToPalette("Key Signatures");
+      else if (cmd == "time-signatures-palette")
+         shiftFocusToPalette("Time Signatures");
+      else if (cmd == "barlines-palette")
+         shiftFocusToPalette("Barlines");
+      else if (cmd == "lines-palette")
+         shiftFocusToPalette("Lines");
+      else if (cmd == "arpeggios-glissandi-palette")
+         shiftFocusToPalette("Arpegios && Glissandi");
+      else if (cmd == "breaths-pauses-palette")
+         shiftFocusToPalette("Breaths && Pauses");
+      else if (cmd == "brackets-palette")
+         shiftFocusToPalette("Go to Brackets");
+      else if (cmd == "articulations-ornaments-palette")
+         shiftFocusToPalette("Articulations && Ornaments");
+      else if (cmd == "accidentals-palette")
+         shiftFocusToPalette("Accidentals");
+      else if (cmd == "dynamics-palette")
+         shiftFocusToPalette("Dynamics");
+      else if (cmd == "fingering-palette")
+         shiftFocusToPalette("Fingering");
+      else if (cmd == "note-heads-palette")
+         shiftFocusToPalette("Note Heads");
+      else if (cmd == "tremolo-palette")
+         shiftFocusToPalette("Tremolo");
+      else if (cmd == "repeats-palette")
+         shiftFocusToPalette("Repeats");
+      else if (cmd == "tempo-palette")
+         shiftFocusToPalette("Tempo");
+      else if (cmd == "text-palette")
+         shiftFocusToPalette("Text");
+      else if (cmd == "breaks-spacers-palette")
+         shiftFocusToPalette("Breaks && Spacers");
+      else if (cmd == "bagpipe-palette")
+         shiftFocusToPalette("Bagpipe Embellishments");
+      else if (cmd == "beam-properties-palette")
+         shiftFocusToPalette("Beam Properties");
+      else if (cmd == "frames-measures-palette")
+         shiftFocusToPalette("Frame && Measures");
+      else if (cmd == "symbols-palette")
+         shiftFocusToPalette("Symbols");
       else if (cmd == "inspector")
             showInspector(a->isChecked());
 #ifdef OMR

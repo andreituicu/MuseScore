@@ -63,6 +63,7 @@ class PaletteBoxButton : public AccessibleToolButton {
 
    public:
       PaletteBoxButton(Palette*, QWidget* parent = 0);
+      Palette* getPalette() { return palette; }
 
       void setId(int v) { id = v; }
       };
