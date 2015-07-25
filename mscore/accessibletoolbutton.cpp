@@ -7,7 +7,6 @@ namespace Ms {
 
 AccessibleToolButton::AccessibleToolButton(QWidget *parent) : QToolButton(parent)
       {
-      this->setDefaultAction(defaultQAction);
       this->setFocusPolicy(Qt::TabFocus);
       }
 

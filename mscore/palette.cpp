@@ -98,7 +98,7 @@ Palette::Palette(QWidget* parent)
       setReadOnly(false);
       setSystemPalette(false);
       _moreElements = false;
-      setFocusPolicy(Qt::StrongFocus);
+      setFocusPolicy(Qt::TabFocus);
       setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Ignored);
       accessibilityHandler = 0;
       }
@@ -109,7 +109,7 @@ Palette::~Palette()
             delete cell;
       }
 
-//---------------------------------------------------------
+//------------------------------          ---------------------------
 //   resizeEvent
 //---------------------------------------------------------
 
@@ -276,18 +276,21 @@ void Palette::mousePressEvent(QMouseEvent* ev)
       PaletteCell* cell = cells[dragIdx];
       if (cell && (cell->tag == "ShowMore"))
             emit displayMore(_name);
-
-      QRect r;
-      if (highlightedCellIdx != -1)
-            r = idxRect(highlightedCellIdx);
-      highlightedCellIdx = idx(ev->pos());
-      if (highlightedCellIdx != -1) {
-            if (cells[highlightedCellIdx] == 0)
-                  highlightedCellIdx = -1;
-            else
-                  r |= idxRect(highlightedCellIdx);
+      /* uncomment for mouse click to change the highlighted cell
+      if (hasFocus()) {
+            QRect r;
+            if (highlightedCellIdx != -1)
+                  r = idxRect(highlightedCellIdx);
+            highlightedCellIdx = idx(ev->pos());
+            if (highlightedCellIdx != -1) {
+                  if (cells[highlightedCellIdx] == 0)
+                        highlightedCellIdx = -1;
+                  else
+                        r |= idxRect(highlightedCellIdx);
+                  }
+            update(r);
             }
-      update(r);
+            */
       }
 
 //---------------------------------------------------------
