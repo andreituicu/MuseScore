@@ -671,24 +671,34 @@ void Palette::moveHighlightedCellTo(int idx, bool accessibleEvent)
 
 void Palette::updateAccessibility(AccessiblePalette::EventType t)
       {
-      if (accessibilityHandler) {
-            accessibilityHandler->accessibleEvent(t);
-            switch (t) {
-                  case AccessiblePalette::KeyboardNavigation: {
-                        QAccessibleValueChangeEvent ev(this, highlightedCellIdx);
-                        QAccessible::updateAccessibility(&ev);
+      if (QAccessible::isActive()) {
+            /*The factory method for creating the accessibility handler is running in a different thread
+             * and can be executed before the palette's constructor finishes */
+            if (accessibilityHandler == 0)
+                  accessibilityHandler = static_cast<AccessiblePalette*>(QAccessible::queryAccessibleInterface(this));
+
+            /* Double checking */
+            if (accessibilityHandler) {
+                  accessibilityHandler->accessibleEvent(t);
+                  switch (t) {
+                        case AccessiblePalette::KeyboardNavigation: {
+                              QAccessibleValueChangeEvent ev(this, highlightedCellIdx);
+                              QAccessible::updateAccessibility(&ev);
+                              }
+                              break;
+                        case AccessiblePalette::MouseMove: {
+                              QAccessibleValueChangeEvent ev(this, currentIdx);
+                              QAccessible::updateAccessibility(&ev);
+                              }
+                              break;
+                        case AccessiblePalette::Selection: {
+                              QAccessibleValueChangeEvent ev(this, selectedIdx);
+                              QAccessible::updateAccessibility(&ev);
+                              }
+                              break;
+                        default:
+                              break;
                         }
-                        break;
-                  case AccessiblePalette::MouseMove: {
-                        QAccessibleValueChangeEvent ev(this, currentIdx);
-                        QAccessible::updateAccessibility(&ev);
-                        }
-                  case AccessiblePalette::Selection: {
-                        QAccessibleValueChangeEvent ev(this, selectedIdx);
-                        QAccessible::updateAccessibility(&ev);
-                        }
-                  default:
-                        break;
                   }
             }
       }
